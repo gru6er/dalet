@@ -9,7 +9,9 @@ Folder="/home/$USER/Videos/"
 IFS=$'\n'
 
 for var in $(echo "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS")
+
     do
+
         folder_name=$(basename $(dirname "$var"))_
 
         file_name=$(basename "$var" | sed 's/[[:upper:]]*/\L&/g')
@@ -19,21 +21,32 @@ for var in $(echo "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS")
         if [[ -z $(echo $file_name | grep '\.') ]]; then
 
             zenity --error --text="Смотри, что выделяешь! Я тебе не Ванга! Где расширение файла?!" --title="RIKRZ СООБЩАЕТ" --timeout=5
+
             exit 1
+
         fi
 
         ext=${var##*.}
 
-        QuitEXT=("doc" "exe" "rar" "zip" "rtf" "pdf" "txt" "docx" "inf" "xls" "xmp" "pek" "cfa" "index" "html" "xlsx" "tar" "7z" "gzip" "htm" "iso" "torrent" "djvu" "fb2")
+        QuitEXT=("avi" "asf" "wmv" "flv" "mkv" "mov" "mp4" "m4v" "bdmv" "mxf" "webm" "bik" "divx" "mpg" "mpeg" "ts" "m2ts" "mts" "vob" "ifo" "m2v" "3gp" "3g2" "3gp2" "3gpp" "ogm" "ogv" "rm" "rmvb" "mp3" "aac" "wma" "flac" "m4a" "mka" "mp2" "mpa" "mpc" "ape" "ofr" "ogg" "ac3" "dts" "ra" "wv" "tta" "mid" "wav" "cda" "amr" "mod" "xm" "opus" "m2p")
 
-        for i in ${QuitEXT[@]}; do
+        if echo "${QuitEXT[@]}" | grep -qw "$ext"; then
 
-            if [ $ext = $i ]; then
+                :
 
-                zenity --error --text="Смотри, что выделяешь!!! Это не видео!" --title="RIKRZ СООБЩАЕТ" --timeout=5
+        else
+
+        zenity --error --text="Смотри, что выделяешь!!! Это не видео!" --title="RIKRZ СООБЩАЕТ" --timeout=5
+
                 exit 1
-            fi
-        done
+
+        fi
+
+        if [ $ext == "m2p" ] ; then
+
+                file_name=${file_name//m2p/mpg}
+
+        fi
 
         new_filename=`echo $file_name | sed "y/абвгдезийклмнопрстуфхцы/abvgdezijklmnoprstufhcy/"`
         new_filename=${new_filename//ч/ch};
@@ -47,11 +60,23 @@ for var in $(echo "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS")
         new_filename=${new_filename//ъ/};
         new_filename=${new_filename//ь/}
 
-        e=$Folder$folder_name$new_filename
+        e=$Folder$folder_name
 
-        cp "$var" "$e"
+        AudioEXT=("mp3" "aac" "wma" "flac" "m4a" "mka" "mp2" "mpa" "mpc" "ape" "ofr" "ogg" "ac3" "dts" "ra" "wv" "tta" "mid" "wav" "cda" "amr" "mod" "xm" "opus")
 
-        echo $(date +%x%t%T) \< "$new_filename" \> >> $Folder/quant_log.txt
+        if echo "${AudioEXT[@]}" | grep -qw "$ext"; then
+
+                new_filename=${new_filename//$ext/mp4}
+
+                ffmpeg -loop 1 -i /home/$USER/Videos/gcp.jpg -i $var  -s 1920x1080 -c:v libx264 -c:a aac -b:a 192k -shortest -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" $e$new_filename
+
+        else
+
+                cp "$var" "$e"$new_filename
+
+        fi
+
+#        echo $(date +%x%t%T) \< "$new_filename" \> >> $Folder/quant_log.txt
 
 done
 
