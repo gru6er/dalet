@@ -4,7 +4,7 @@
 
 set -E
 
-MEDIA_FOLDER="/home/$USER/Videos/"
+DEST_FOLDER="/home/$USER/Videos/"
 
 IFS=$'\n'
 
@@ -12,19 +12,23 @@ for VAR in $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}")
 
     do
 
-        FOLDER_NAME=$(basename $(dirname "${VAR}"))_
+        FOLDER_NAME=$(basename $(dirname "${VAR}"))_   #сорс директорию добавляем в переменную
 
-        FILENAME=$(basename "${VAR}" | sed 's/[[:upper:]]*/\L&/g')
+        FILENAME=$(basename "${VAR}" | sed 's/[[:upper:]]*/\L&/g') #Названия файлов переводятся в нижний регистр
 
-        FILENAME="${FILENAME// /_}"
+        FILENAME="${FILENAME// /_}" #пробелы заменяются нижним подчеркиванием
 
-        if [[ -z $(echo "${FILENAME}" | grep '\.') ]]; then
+        # Файлы проверяются на наличие расширения
+
+        if [[ -z $(echo "${FILENAME}" | grep '\.') ]]; then                  
 
             zenity --error --text="Смотри, что выделяешь! Я тебе не Ванга! Где расширение файла?!" --title="RIKRZ СООБЩАЕТ" --timeout=5
 
             exit 1
 
         fi
+
+        # Проверка расширения файла
 
         EXT="${VAR##*.}"
 
@@ -42,11 +46,15 @@ for VAR in $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}")
 
         fi
 
+        # Замена разширения m2p на mpg
+
         if [ "${EXT}" == "m2p" ] ; then
 
                 FILENAME="${FILENAME//m2p/mpg}"
 
         fi
+
+        # Кириллический буквы транскрибируются в латиницу.
 
         NEW_FILENAME=`echo $FILENAME | sed "y/абвгдезийклмнопрстуфхцы/abvgdezijklmnoprstufhcy/"`
         NEW_FILENAME=${NEW_FILENAME//ч/ch};
@@ -60,7 +68,7 @@ for VAR in $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}")
         NEW_FILENAME=${NEW_FILENAME//ъ/};
         NEW_FILENAME=${NEW_FILENAME//ь/}
 
-        E="${MEDIA_FOLDER}""${FOLDER_NAME}"
+        E="${DEST_FOLDER}""${FOLDER_NAME}"
 
         AUDIO_EXT=("mp3" "aac" "wma" "flac" "m4a" "mka" "mp2" "mpa" "mpc" "ape" "ofr" "ogg" "ac3" "dts" "ra" "wv" "tta" "mid" "wav" "cda" "amr" "mod" "xm" "opus")
 
@@ -68,7 +76,7 @@ for VAR in $(echo "${NAUTILUS_SCRIPT_SELECTED_FILE_PATHS}")
 
                 NEW_FILENAME="${NEW_FILENAME//$EXT/mp4}"
 
-                ffmpeg -loop 1 -i /home/$USER/Videos/gcp.jpg -i "${VAR}"  -s 1920x1080 -c:v libx264 -c:a aac -b:a 192k -shortest -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" "${E}""${NEW_FILENAME}"
+                ffmpeg -loop 1 -i /home/$USER/Videos/gcp.jpg -i "${VAR}"  -s 1920x1080 -c:v libx264 -c:a aac -b:a 192k -shortest -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" "${E}""${NEW_FILENAME}"     # аудио файлы перекодируются в видео с гцп.
 
         else
 
